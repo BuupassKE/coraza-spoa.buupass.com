@@ -1,0 +1,26 @@
+name: Docker Image CI - Production
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build the Docker image
+        run: |
+          echo "Building the Docker image"
+          export REPO=$(echo "$GITHUB_REPOSITORY#*/" | cut -d'/' -f2 | cut -d'.' -f1)
+          cd example
+          docker build -t buupass0/$REPO:dev-$GITHUB_SHA .
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u buupass0 --password-stdin
+
+      - name: Push image to Docker Hub
+        run: |
+          echo "Pushing image to Docker Hub"
+          export REPO=$(echo "$GITHUB_REPOSITORY#*/" | cut -d'/' -f2 | cut -d'.' -f1)
+          docker push buupass0/$REPO:dev-$GITHUB_SHA
